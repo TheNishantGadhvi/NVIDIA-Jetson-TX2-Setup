@@ -1,13 +1,13 @@
-# NVIDIA Jetson TX2 Setup
+# NVIDIA Jetson TX2 Setup with VM Virtual box  5.2.8 r121009 on Macbook Pro 10.13.4, High Sierra
 If your TX2, like mine, came without an operating system, you will have no luck booting into a native Linux environment. In any case, NVIDIA suggests updating JetPack to the latest version.
 
 So let's get a Linux environment, JetPack, Cuda, and a few other items installed.
 
-# JetPack 3.1 Installation
+# JetPack 3.2 Installation
 
 First of all, much credit is owed to Klein Yuan [on Github](https://github.com/KleinYuan/tx2-flash) for his tutorial. This walk through will build off of that. Also, [here](https://youtu.be/D7lkth34rgM) is an awesome walkthrough on Youtube of the setup and install of JetPack, but some of the details were missing for a VM (hence why I wrote this!)
 
-I will be using a MacBook Pro(running 10.13.4, Sierra) with VirtualBox running Ubuntu 16.04 to flash the TX2.
+I will be using a MacBook Pro(running 10.13.4, High Sierra) with VirtualBox running Ubuntu 16.04 to flash the TX2.
 
 The entire process takes about 2 hours(depends on connection/data transfer rate)
 
