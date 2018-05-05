@@ -7,29 +7,29 @@ So let's get a Linux environment, JetPack, Cuda, and a few other items installed
 
 First of all, much credit is owed to Klein Yuan [on Github](https://github.com/KleinYuan/tx2-flash) for his tutorial. This walk through will build off of that. Also, [here](https://youtu.be/D7lkth34rgM) is an awesome walkthrough on Youtube of the setup and install of JetPack, but some of the details were missing for a VM (hence why I wrote this!)
 
-I will be using a MacBook Pro(running 10.12.6, Sierra) with VirtualBox to flash the TX2
+I will be using a MacBook Pro(running 10.13.4, Sierra) with VirtualBox running Ubuntu 16.04 to flash the TX2.
 
 The entire process takes about 2 hours(depends on connection/data transfer rate)
 
 ##### 1. Get VirtualBox to run a Linux Environment
 
-Since the Jetson TX2 must be flashed with a Linux environment, and ideally 14.04 Ubuntu(have heard of 16.06 working also), we will need to create a VM with Linux running.
+Since the Jetson TX2 must be flashed with a Linux environment, and ideally 14.04 Ubuntu(I did using 16.04), we will need to create a VM with Linux running.
 
 Download VirtualBox [here](https://www.virtualbox.org/), or use VMWare if you're on Windows. With VirtualBox, you're also going to need the *Extension Package* to use USB 2.0/3.0. This can be directly downloaded [here](http://download.virtualbox.org/virtualbox/5.2.2/Oracle_VM_VirtualBox_Extension_Pack-5.2.2-119230.vbox-extpack)
 
 Once you have VirtualBox, we need to get a boot image for Linux.
 
 ##### 2. Download Linux Boot Image
-Since we need to use Linux Ubuntu 14.04, let's grab that from the [Linux Downloads page.](http://releases.ubuntu.com/14.04/)
+Since we need to use Linux Ubuntu 14.04, let's grab that from the [Linux Downloads page.](http://releases.ubuntu.com/14.04/ or http://releases.ubuntu.com/16.04/)
 
-[This link](http://releases.ubuntu.com/14.04/ubuntu-14.04.5-desktop-amd64.iso) will directly download the `.iso` file for 64-bit desktop machines.
+[This link](http://releases.ubuntu.com/14.04/ubuntu-14.04.5-desktop-amd64.iso) will directly download the `.iso` file for 64-bit desktop machines. I have used this [Link](http://releases.ubuntu.com/16.04/ubuntu-16.04.4-desktop-amd64.iso) to download the 16.04 release.
 
 ##### 3. Setup VM
 With the Linux Boot Image downloaded, we need to setup the VM and boot into it. 
 
-Select the *New* Icon wheel in the upper left of VirtualBox. Fill in the necessary information. You should select at least 1+ GB RAM, and 32GB HD.
+Select the *New* Icon wheel in the upper left of VirtualBox. Fill in the necessary information. You should select at least 2+ GB RAM, and 32GB HD.
 
-Go to Settings --> Network --> Adapter 1, change Attached to to Bridged Adapter, and name en0: Wi-Fi
+Go to Settings --> Network --> Adapter 1, change Attached to to Bridged Adapter, and in the Name select the one with Nvidia Tegra. Also, select the tab Adapter 2, check the box of Enable Network Adapter, change Attached to to Nat (and nothing to do with Name here.) Adapter 1 will help communicate host with Jetson and Adapter 2 will give internet to the host Virtual Machine from the Mac.  
 
 Now launch the VM you just created. At this point, if it hasn't already, VirtualBox will ask you which boot image it should use. Navigate to your `.iso` file, and select it.
 
@@ -39,7 +39,7 @@ Once the Linux environment comes up, it will ask if you want to try out Linux, o
 
 ##### 5. Get JetPack
 
-Once inside the Linux Environment, get NVIDIA JetPack [here](https://developer.nvidia.com/embedded/jetpack) *(at the time of this writing it was version 3.1)*. You're going to need to setup a developer account with them, if you don't have one already!
+Once inside the Linux Environment, get NVIDIA JetPack [here](https://developer.nvidia.com/embedded/jetpack) *(at the time of this writing it was version 3.2)*. You're going to need to setup a developer account with them, if you don't have one already!
 
 Once this is downloaded, take the file and put it in a directory like `~/documents/JetPack/`
 
@@ -51,18 +51,19 @@ With the Jetson shutdown and unplugged from power, plug in the:
 * Micro USB port with the provided USB cable, and connect that to your Mac - which we call the *Host*
 * USB port to a hub(ideally) with mouse and keyboard. If not, just to a mouse or keyword and switch when needed
 * Antennas that came with the Jetson
-* Finally, the power cable
+* Finally, the power cable to the nearest wall socket.
 
 ##### 7. Put the NVIDIA Jetson TX2 into Force Recovery Mode
 
 From idle mode(with a single red LED illuminated on the Jetson), put the Jetson into Forced recovery mode, by following these steps:
-* Press and release the Power Button (furthest to the Right, of the 4 buttons onboard)
+* Press and release the Power Button (furthest to the Right, of the 4 buttons onboard which says PWR on the PCB)
 * Hold down the Forced Recovery button (says 'REC' on the pcb)
 * With REC held down, press and release the reset button (says 'RST' on the pcb)
 * Hold REC for 2 more seconds, and release
 
 To verify you've done this correctly, open up a terminal and list the usb devices with one of these commands:
 ```sh
+$ lsusb
 $ ioreg -p IOUSB 
 $ ioreg -p IOUSB -w0 -l
 $ ioreg -p IOUSB -w0 | sed 's/[^o]*o //; s/@.*$//' | grep -v '^Root.*'
@@ -90,7 +91,7 @@ $ chmod +x ./JetPack-L4T-3.1-linux-x64.run
 ```
 Run jetpack:
 ```sh
-$ sudo ./JetPack-L4T-3.1-linux-x64.run
+$ ./JetPack-L4T-3.1-linux-x64.run
 ```
 This should bring up a GUI. Click through, select the TX2, do a full installation, accept the terms, and click next.
 
@@ -130,7 +131,35 @@ It will then ask you for your IP address:
 
 ![alt text](http://docs.nvidia.com/jetpack-l4t/2_1/content/developertools/mobile/jetpack/images/jetpack_l4t_device_info.003_700x527.png)
 
-To retrieve this, open up a terminal on the Linux VM, and type:
+At this point we will make a new wired connection in VM. For this, type below command in the terminal of VM:
+```sh
+$ cd
+$ nm-connection-editor
+```
+This will open up the Network Manager. There click on Add --> Ethernet (it should be under Hardware) and --> Create
+Now, in the Ethernet tab --> Device, select enp0s3. Finally, in IPv4 tab --> Method, select Manual and enter the IP: 192.168.55.X (X can be any number but not 1 as it is already taken by Jetson), and Netmask: 255.255.255.0 (This might change to 24, but don't worry about it.). 
+
+At this point, connect the Jetson with your Mac through Ethernet cable. And, dont forget to connect it from Devices --> USB (in VM top menu bar). 
+Now, in the window of Jetpack installation, enter the IP: 192.168.55.1, User ID and Password are nvidia. After this click Next and go through the process. 
+
+For Error: "CUDA cannot be installed on device.This may be caused by other apt-get command running on device when installing CUDA.Please use apt-get command in a terminal to make sure following packages are installed correctly on device before continue:cuda-toolkit-8-0 libgomp1 libfreeimage-dev libopenmpi-dev openmpi-bin.After these packages are installed on device,press Enter key to continue." 
+
+Here the issue is nothing but your Jetson was looking for internet to download Cuda and it doesnt have. Don't close this window. We will get back to it. 
+
+Work around here is, connect a display to Jetson though HDMI and connect it to the Wi-Fi. 
+Now, from the VM, open a new terminal window and SSH into the jetson using following commands:
+```sh
+$ ssh nvidia@192.168.55.1 
+```
+You should be in the Jetson's terminal. Now, we will download all the packages listed in the error. For this run:
+```sh
+$ sudo apt-get update       # Here, updating will help fixing some missing components and packages for the next command.
+$ sudo apt-get install cuda-toolkit-8-0 libgomp1 libfreeimage-dev libopenmpi-dev openmpi-bin
+```
+Once done here, go back to error window "Installing Cuda on target" and press enter. (I pressed enter thrice and it worked thereafter).
+This should take care of everything. And, you should be all set. 
+
+To retrieve IP of the device, open up a terminal on the machine, and type:
 ```sh
 $ hostname -I
 ```
